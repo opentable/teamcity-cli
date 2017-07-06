@@ -119,6 +119,7 @@ func setMetaRunner(tc teamcity) {
 	}
 	responseBody := string(responseBodyBytes)
 	if response.StatusCode != 200 {
-		log.Fatalf("Got http status code %d; body: %s", response.StatusCode, string(responseBody))
+		log.Fatalf("Got http status %s; body: %s", response.Status, string(responseBody))
 	}
+	log.Printf("Got response: %s \n%s", response.Status, responseBody)
 }
