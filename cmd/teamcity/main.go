@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 )
 
 var flags = flagss{}
@@ -30,10 +31,12 @@ func (tc *teamcity) URL(uri string) *url.URL {
 	return tc.BaseURL.ResolveReference(rel)
 }
 
+var authSanitizer = regexp.MustCompile(`(.*/)[^@]*@(.*)`)
+
 func (tc *teamcity) PostForm(uri string, values url.Values) (*http.Response, error) {
-	u := tc.URL(uri)
-	log.Printf("POST %s", u)
-	return tc.Client.PostForm(u.String(), values)
+	u := tc.URL(uri).String()
+	log.Printf("POST %s", authSanitizer.ReplaceAllString(u, `$1[user:pass]@$2`))
+	return tc.Client.PostForm(u, values)
 }
 
 var requiredFields = map[string]*string{}
