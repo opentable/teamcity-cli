@@ -10,17 +10,16 @@ import (
 	"regexp"
 )
 
-var flags = flagss{}
-
-type flagss struct {
-	BaseURL, Username, Password, Action, DataFile string
-}
+var flags = struct {
+	BaseURL, Username, Password, Action, DataFile, ProjectID string
+}{}
 
 type teamcity struct {
 	BaseURL   *url.URL
 	CookieJar *cookiejar.Jar
 	Client    *http.Client
 	DataFile  string
+	ProjectID string
 }
 
 func (tc *teamcity) URL(uri string) *url.URL {
@@ -58,6 +57,7 @@ func init() {
 	req(&flags.Password, "password", "", "TeamCity password")
 	req(&flags.Action, "action", "", "Action to perform")
 	opt(&flags.DataFile, "data", "", "File to send as body")
+	opt(&flags.ProjectID, "project", "_Root", "Project to modify")
 }
 
 func main() {
@@ -85,8 +85,9 @@ func main() {
 		Client: &http.Client{
 			Jar: jar,
 		},
-		DataFile: flags.DataFile,
-		BaseURL:  baseURL,
+		DataFile:  flags.DataFile,
+		ProjectID: flags.ProjectID,
+		BaseURL:   baseURL,
 	}
 	action(tc)
 }
@@ -105,7 +106,7 @@ func setMetaRunner(tc teamcity) {
 		log.Fatal(err)
 	}
 	response, err := tc.PostForm("plugins/metarunner/runner-edit.html", url.Values{
-		"projectId":         []string{"_Root"},
+		"projectId":         []string{tc.ProjectID},
 		"editRunnerId":      []string{tc.DataFile},
 		"metaRunnerContent": []string{string(body)},
 	})
